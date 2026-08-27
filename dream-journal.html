@@ -48,7 +48,7 @@
 
   /* ---------- Sidebar ---------- */
   #sidebar {
-    width: 300px;
+    width: 320px;
     flex-shrink: 0;
     background: var(--bg-sidebar);
     color: var(--ink-on-dark);
@@ -57,7 +57,7 @@
   }
 
   #sidebar-header {
-    padding: 20px 18px 14px;
+    padding: 20px 18px 12px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     flex-shrink: 0;
   }
@@ -83,34 +83,60 @@
   #search-input::placeholder { color: var(--ink-on-dark-soft); }
   #search-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  #tag-filters {
+  #search-scope {
     display: flex;
-    flex-wrap: wrap;
     gap: 6px;
-    padding: 12px 18px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    max-height: 92px;
-    overflow-y: auto;
-    flex-shrink: 0;
+    margin-top: 9px;
+  }
+  .scope-btn {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 6px 4px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: var(--ink-on-dark-soft);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .scope-btn.active {
+    background: rgba(139,127,199,0.28);
+    color: #D9D4F2;
+    border-color: var(--accent);
   }
 
-  .tag-chip {
+  /* Theme tabs: horizontal scroll row acting as group switcher */
+  #theme-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  #theme-tabs::-webkit-scrollbar { display: none; }
+
+  .theme-tab {
     font-size: 12px;
-    padding: 5px 10px;
+    font-weight: 600;
+    padding: 6px 12px;
     border-radius: 100px;
-    background: rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.06);
     color: var(--ink-on-dark-soft);
     border: 1px solid rgba(255,255,255,0.1);
     cursor: pointer;
     white-space: nowrap;
+    flex-shrink: 0;
     font-family: inherit;
   }
-  .tag-chip:hover { background: rgba(255,255,255,0.13); }
-  .tag-chip.active {
+  .theme-tab:hover { background: rgba(255,255,255,0.13); }
+  .theme-tab.active {
     background: var(--accent);
     color: #1E2235;
     border-color: var(--accent);
-    font-weight: 600;
   }
 
   #new-btn {
@@ -134,6 +160,16 @@
     -webkit-overflow-scrolling: touch;
     padding: 0 8px 16px;
   }
+
+  .group-header {
+    padding: 14px 12px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ink-on-dark-soft);
+  }
+  .group-header:first-child { padding-top: 4px; }
 
   .entry-item {
     padding: 12px 10px;
@@ -261,7 +297,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 4px 0 20px;
+    margin: 4px 0 8px;
   }
   #tags-row label {
     font-size: 11.5px;
@@ -282,6 +318,32 @@
     min-width: 0;
   }
   #tags-input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+  #tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    min-height: 14px;
+  }
+  #tag-suggestions .suggest-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-right: 2px;
+  }
+  .suggest-chip {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .suggest-chip:hover { border-color: var(--accent); color: #5B4FA8; }
+  .suggest-chip::before { content: "+ "; }
 
   /* Toggle: dream vs interpretation */
   #mode-toggle {
@@ -369,7 +431,6 @@
     #sidebar { width: 100%; }
     #main { width: 100%; }
 
-    /* list view is the default screen */
     #app.detail-open #sidebar { display: none; }
     #app:not(.detail-open) #main { display: none; }
 
@@ -390,9 +451,14 @@
   <div id="sidebar">
     <div id="sidebar-header">
       <h1>Dream Journal</h1>
-      <input id="search-input" type="text" placeholder="Search dreams, interpretations, tags…" />
+      <input id="search-input" type="text" placeholder="Search…" />
+      <div id="search-scope">
+        <button class="scope-btn active" data-scope="all">All text</button>
+        <button class="scope-btn" data-scope="dream">Dream only</button>
+        <button class="scope-btn" data-scope="interp">Interpretation only</button>
+      </div>
     </div>
-    <div id="tag-filters"></div>
+    <div id="theme-tabs"></div>
     <button id="new-btn">+ New dream</button>
     <div id="entry-list"></div>
   </div>
@@ -412,6 +478,7 @@
         <label for="tags-input">Themes</label>
         <input id="tags-input" type="text" placeholder="e.g. flying, water, family" />
       </div>
+      <div id="tag-suggestions"></div>
 
       <div id="mode-toggle">
         <button class="mode-btn dream" data-mode="dream">
@@ -444,20 +511,21 @@
   const STORAGE_KEY = 'dreamJournalEntries';
   let dreams = [];
   let activeId = null;
-  let activeMode = 'dream';
-  let activeTagFilter = null;
+  let activeTagFilter = null;   // theme tab selection (single-select), null = All
   let searchTerm = '';
+  let searchScope = 'all';      // 'all' | 'dream' | 'interp'
   let saveTimer = null;
 
   const el = (id) => document.getElementById(id);
   const appEl = el('app');
   const entryList = el('entry-list');
-  const tagFilters = el('tag-filters');
+  const themeTabs = el('theme-tabs');
   const editor = el('editor');
   const mainEmpty = el('main-empty');
   const titleInput = el('title-input');
   const dateLabel = el('date-label');
   const tagsInput = el('tags-input');
+  const tagSuggestions = el('tag-suggestions');
   const dreamText = el('dream-text');
   const interpText = el('interp-text');
   const saveStatus = el('save-status');
@@ -499,8 +567,11 @@
   function matchesFilters(d) {
     if (activeTagFilter && !(d.tags || []).includes(activeTagFilter)) return false;
     if (searchTerm) {
-      const hay = (d.title + ' ' + d.content + ' ' + d.interpretation + ' ' + (d.tags || []).join(' ')).toLowerCase();
-      if (!hay.includes(searchTerm.toLowerCase())) return false;
+      let hay;
+      if (searchScope === 'dream') hay = d.title + ' ' + d.content + ' ' + (d.tags || []).join(' ');
+      else if (searchScope === 'interp') hay = d.title + ' ' + d.interpretation + ' ' + (d.tags || []).join(' ');
+      else hay = d.title + ' ' + d.content + ' ' + d.interpretation + ' ' + (d.tags || []).join(' ');
+      if (!hay.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     }
     return true;
   }
@@ -509,21 +580,47 @@
     return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function renderTagFilters() {
+  function renderThemeTabs() {
     const tags = allTags();
-    tagFilters.innerHTML = '';
-    if (tags.length === 0) return;
+    themeTabs.innerHTML = '';
+
+    const allTab = document.createElement('button');
+    allTab.className = 'theme-tab' + (activeTagFilter === null ? ' active' : '');
+    allTab.textContent = 'All';
+    allTab.onclick = () => { activeTagFilter = null; renderThemeTabs(); renderList(); };
+    themeTabs.appendChild(allTab);
+
     tags.forEach(tag => {
-      const chip = document.createElement('button');
-      chip.className = 'tag-chip' + (activeTagFilter === tag ? ' active' : '');
-      chip.textContent = tag;
-      chip.onclick = () => {
+      const tab = document.createElement('button');
+      tab.className = 'theme-tab' + (activeTagFilter === tag ? ' active' : '');
+      tab.textContent = tag;
+      tab.onclick = () => {
         activeTagFilter = (activeTagFilter === tag) ? null : tag;
-        renderTagFilters();
+        renderThemeTabs();
         renderList();
       };
-      tagFilters.appendChild(chip);
+      themeTabs.appendChild(tab);
     });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function createEntryItem(d) {
+    const item = document.createElement('div');
+    item.className = 'entry-item' + (d.id === activeId ? ' active' : '');
+    const snippetSource = d.content || d.interpretation || '';
+    item.innerHTML = `
+      <div class="entry-title">${escapeHtml(d.title || 'Untitled dream')}</div>
+      <div class="entry-meta">${formatDate(d.updatedAt)}</div>
+      <div class="entry-snippet">${escapeHtml(snippetSource.slice(0, 80))}</div>
+      ${(d.tags && d.tags.length) ? `<div class="entry-tags">${d.tags.map(t => `<span class="entry-tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+    `;
+    item.onclick = () => selectDream(d.id);
+    return item;
   }
 
   function renderList() {
@@ -539,30 +636,67 @@
       return;
     }
 
+    if (activeTagFilter) {
+      // Single theme selected via tab: flat list, already global-sorted by recency
+      visible.forEach(d => entryList.appendChild(createEntryItem(d)));
+      return;
+    }
+
+    // "All" view: group visually by theme so groups are easy to scan
+    const groups = {};
+    const untagged = [];
     visible.forEach(d => {
-      const item = document.createElement('div');
-      item.className = 'entry-item' + (d.id === activeId ? ' active' : '');
-      const snippetSource = d.content || d.interpretation || '';
-      item.innerHTML = `
-        <div class="entry-title">${escapeHtml(d.title || 'Untitled dream')}</div>
-        <div class="entry-meta">${formatDate(d.updatedAt)}</div>
-        <div class="entry-snippet">${escapeHtml(snippetSource.slice(0, 80))}</div>
-        ${(d.tags && d.tags.length) ? `<div class="entry-tags">${d.tags.map(t => `<span class="entry-tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      `;
-      item.onclick = () => selectDream(d.id);
-      entryList.appendChild(item);
+      if (d.tags && d.tags.length) {
+        d.tags.forEach(t => { (groups[t] = groups[t] || []).push(d); });
+      } else {
+        untagged.push(d);
+      }
     });
+
+    const tagNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+    tagNames.forEach(tag => {
+      const header = document.createElement('div');
+      header.className = 'group-header';
+      header.textContent = tag;
+      entryList.appendChild(header);
+      groups[tag].forEach(d => entryList.appendChild(createEntryItem(d)));
+    });
+
+    if (untagged.length) {
+      const header = document.createElement('div');
+      header.className = 'group-header';
+      header.textContent = 'Untagged';
+      entryList.appendChild(header);
+      untagged.forEach(d => entryList.appendChild(createEntryItem(d)));
+    }
   }
 
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
+  function renderTagSuggestions() {
+    const current = parseTags(tagsInput.value);
+    const suggestions = allTags().filter(t => !current.includes(t));
+    tagSuggestions.innerHTML = '';
+    if (suggestions.length === 0) return;
+    const label = document.createElement('span');
+    label.className = 'suggest-label';
+    label.textContent = 'Add:';
+    tagSuggestions.appendChild(label);
+    suggestions.forEach(tag => {
+      const chip = document.createElement('button');
+      chip.className = 'suggest-chip';
+      chip.textContent = tag;
+      chip.onclick = () => {
+        const tags = parseTags(tagsInput.value);
+        tags.push(tag);
+        tagsInput.value = tags.join(', ');
+        renderTagSuggestions();
+        scheduleSave();
+      };
+      tagSuggestions.appendChild(chip);
+    });
   }
 
   function selectDream(id) {
     activeId = id;
-    activeMode = 'dream';
     const d = dreams.find(x => x.id === id);
     if (!d) return;
     mainEmpty.style.display = 'none';
@@ -574,6 +708,7 @@
     dreamText.value = d.content || '';
     interpText.value = d.interpretation || '';
     setMode('dream');
+    renderTagSuggestions();
     renderList();
   }
 
@@ -582,7 +717,6 @@
   }
 
   function setMode(mode) {
-    activeMode = mode;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
     el('dream-panel').classList.toggle('visible', mode === 'dream');
     el('interp-panel').classList.toggle('visible', mode === 'interp');
@@ -608,7 +742,7 @@
     d.updatedAt = Date.now();
     dreams.sort((a, b) => b.updatedAt - a.updatedAt);
     persist();
-    renderTagFilters();
+    renderThemeTabs();
     renderList();
   }
 
@@ -624,7 +758,7 @@
     };
     dreams.unshift(d);
     persist();
-    renderTagFilters();
+    renderThemeTabs();
     renderList();
     selectDream(d.id);
     titleInput.focus();
@@ -635,7 +769,7 @@
     dreams = dreams.filter(x => x.id !== activeId);
     activeId = null;
     persist();
-    renderTagFilters();
+    renderThemeTabs();
     renderList();
     editor.classList.remove('visible');
     mainEmpty.style.display = 'flex';
@@ -647,8 +781,17 @@
   el('delete-btn').onclick = deleteActive;
   el('back-btn').onclick = goBackToList;
   document.querySelectorAll('.mode-btn').forEach(b => b.onclick = () => setMode(b.dataset.mode));
-  [titleInput, tagsInput, dreamText, interpText].forEach(input => {
+  document.querySelectorAll('.scope-btn').forEach(b => b.onclick = () => {
+    searchScope = b.dataset.scope;
+    document.querySelectorAll('.scope-btn').forEach(x => x.classList.toggle('active', x === b));
+    renderList();
+  });
+  [titleInput, dreamText, interpText].forEach(input => {
     input.addEventListener('input', scheduleSave);
+  });
+  tagsInput.addEventListener('input', () => {
+    renderTagSuggestions();
+    scheduleSave();
   });
   el('search-input').addEventListener('input', (e) => {
     searchTerm = e.target.value;
@@ -656,7 +799,7 @@
   });
 
   loadDreams();
-  renderTagFilters();
+  renderThemeTabs();
   renderList();
 })();
 </script>
