@@ -119,6 +119,30 @@
   }
   #theme-tabs::-webkit-scrollbar { display: none; }
 
+  #sort-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px 0;
+  }
+  #sort-row label {
+    font-size: 11.5px;
+    color: var(--ink-on-dark-soft);
+    white-space: nowrap;
+  }
+  #sort-select {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: var(--ink-on-dark);
+    font-size: 12px;
+    font-family: inherit;
+  }
+  #sort-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
   .theme-tab {
     font-size: 12px;
     font-weight: 600;
@@ -459,6 +483,13 @@
       </div>
     </div>
     <div id="theme-tabs"></div>
+    <div id="sort-row">
+      <label for="sort-select">Sort by date</label>
+      <select id="sort-select">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
     <button id="new-btn">+ New dream</button>
     <div id="entry-list"></div>
   </div>
@@ -514,6 +545,7 @@
   let activeTagFilter = null;   // theme tab selection (single-select), null = All
   let searchTerm = '';
   let searchScope = 'all';      // 'all' | 'dream' | 'interp'
+  let sortOrder = 'newest';
   let saveTimer = null;
 
   const el = (id) => document.getElementById(id);
@@ -580,6 +612,13 @@
     return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  function sortByDate(entries) {
+    return entries.sort((a, b) => {
+      const difference = (a.updatedAt || 0) - (b.updatedAt || 0);
+      return sortOrder === 'newest' ? -difference : difference;
+    });
+  }
+
   function renderThemeTabs() {
     const tags = allTags();
     themeTabs.innerHTML = '';
@@ -625,7 +664,7 @@
 
   function renderList() {
     entryList.innerHTML = '';
-    const visible = dreams.filter(matchesFilters);
+    const visible = sortByDate(dreams.filter(matchesFilters));
 
     if (dreams.length === 0) {
       entryList.innerHTML = '<div id="empty-list">No dreams logged yet. Tap "New dream" to write one down.</div>';
@@ -637,7 +676,6 @@
     }
 
     if (activeTagFilter) {
-      // Single theme selected via tab: flat list, already global-sorted by recency
       visible.forEach(d => entryList.appendChild(createEntryItem(d)));
       return;
     }
@@ -659,7 +697,7 @@
       header.className = 'group-header';
       header.textContent = tag;
       entryList.appendChild(header);
-      groups[tag].forEach(d => entryList.appendChild(createEntryItem(d)));
+      sortByDate(groups[tag]).forEach(d => entryList.appendChild(createEntryItem(d)));
     });
 
     if (untagged.length) {
@@ -667,7 +705,7 @@
       header.className = 'group-header';
       header.textContent = 'Untagged';
       entryList.appendChild(header);
-      untagged.forEach(d => entryList.appendChild(createEntryItem(d)));
+      sortByDate(untagged).forEach(d => entryList.appendChild(createEntryItem(d)));
     }
   }
 
@@ -795,6 +833,10 @@
   });
   el('search-input').addEventListener('input', (e) => {
     searchTerm = e.target.value;
+    renderList();
+  });
+  el('sort-select').addEventListener('change', (e) => {
+    sortOrder = e.target.value;
     renderList();
   });
 
